@@ -1,0 +1,21 @@
+# LaTeX junk files
+*.aux
+*.log
+*.out
+*.toc
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.synctex.gz
+*.pdf
+*.run.xml
+*.bcf
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# CDP Studio / IDE specific (if any)
+build/
+*.user

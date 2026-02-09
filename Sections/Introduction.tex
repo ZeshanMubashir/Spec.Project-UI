@@ -1,0 +1,812 @@
+\section{Introduction}
+
+The growing complexity of industrial systems in the era of Industry 4.0 demands advanced
+solutions for communication and control between devices. Traditional approaches
+to industrial communication often require fixed configurations, limiting adaptability
+to changing requirements or operational needs. As industrial environments
+continue to evolve, the ability to dynamically select communication protocols becomes
+increasingly critical.
+
+OPC-UA, MQTT, and Modbus are three widely used industrial communication protocols,
+each with unique features and strengths. OPC-UA provides robust support for platform
+independence and data modeling, making it ideal for complex systems. MQTT, a
+lightweight messaging protocol, is optimized for low-bandwidth, high-latency
+environments, and is commonly used in IoT applications. Modbus, one of the oldest
+and most widely adopted protocols, offers simplicity and reliability for device
+communication.
+
+This study leverages CDP Studio to design a web-based GUI application that
+empowers users to switch seamlessly between these protocols. Unlike conventional
+systems that focus on integrating protocols simultaneously, this approach
+provides a dynamic, user-driven mechanism for protocol selection, ensuring
+adaptability to diverse operational scenarios. The Process Tank Simulator is employed
+as a testbed to validate the system's functionality, showcasing its potential
+for real-time communication and control in industrial automation.
+
+\section{Industrial Communication Protocols}
+
+Industrial communication protocols are standardized rules that enable devices and
+systems within industrial environments to exchange data effectively. These
+protocols ensure seamless integration and interoperability among various
+components in automation systems.
+
+\subsection{MODBUS}
+Modbus is a robust and widely used communication protocol in industrial systems.
+Originally developed by Modicon (now Schneider Electric) in 1979, it enables
+communication between multiple devices connected to the same network. Modbus is notable
+for its simplicity, reliability, and versatility, making it a staple in various
+industrial applications. \cite{modicon1979modbus, recentModbus2022}
+
+\subsubsection{Modbus Architecture}
+
+Modbus operates on a master-slave architecture, where a single device, known as the
+master, initiates communication by sending requests to one or more slave devices.
+These slave devices, which can include sensors, actuators, or other controllers,
+respond to the master's requests but do not initiate communication independently.
+This setup ensures centralized control, with the master managing data exchanges and
+operations across the network. \cite{schneider_modbus_guide}
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=10cm, height=05cm]{
+        Images/MODBUS Pics/Modbus-Network-Architecture.png
+    }
+    % Make sure ProcessTank is in the same folder as your .tex file
+    \caption{Modbus-Network-Architecture}
+    \label{fig:Modbus-Network-Architecture}
+\end{figure}
+
+\subsubsection{Modbus Variants}
+Modbus has several variants, each tailored for specific communication needs:
+
+\begin{enumerate}
+    \item \textbf{Modbus RTU (Remote Terminal Unit):} Utilizes compact, binary representation
+        of data for efficient transmission over serial communication lines such as
+        RS-485 and RS-232. It is widely used in industrial environments due to its
+        efficient use of bandwidth and straightforward implementation \cite{modbus_serial}.
+
+    \item \textbf{Modbus ASCII:} Employs ASCII characters for encoding data, allowing
+        for easier debugging and readability. However, it is less efficient compared
+        to RTU due to the larger message size \cite{modbus_messaging_guide_v1.0b}.
+
+    \item \textbf{Modbus TCP/IP:} Adapts the Modbus protocol to operate over TCP/IP
+        networks, facilitating integration with modern Ethernet infrastructures.
+        This variant encapsulates Modbus messages within TCP/IP packets, enabling
+        communication over local area networks (LAN's) and the internet.
+        \cite{modbus_messaging_guide_v1.0b}.
+\end{enumerate}
+
+\subsubsection{Modbus Data Model}
+The Modbus data model organizes data into distinct types, each identified by a unique
+address:
+
+\begin{itemize}
+    \item \textbf{Coils:} Represent discrete on/off outputs. Each coil is a single
+        bit, and coils are typically used to control physical outputs.
+
+    \item \textbf{Discrete Inputs:} Represent discrete on/off inputs. Each discrete
+        input is a single bit, used to monitor external contacts or binary
+        sensors.
+
+    \item \textbf{Input Registers:} Hold 16-bit input data, typically representing
+        analog inputs.
+
+    \item \textbf{Holding Registers:} Hold 16-bit data for general-purpose use, often
+        representing analog output values or configuration parameters.
+\end{itemize}
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=10cm, height=05cm]{
+        Images/MODBUS Pics/Modbus Address.png
+    }
+    % Make sure ProcessTank is in the same folder as your .tex file
+    \caption{Modbus Data Model}
+    \label{fig:Modbus Data Model}
+\end{figure}
+
+Each data type is addressed independently, allowing for organized and efficient
+data management within Modbus-compatible devices \cite{modbus_spec_v1.1b}.
+
+\subsubsection{Modbus Function Codes}
+
+In the Modbus protocol, the function code is a critical component of the
+Protocol Data Unit (PDU). It specifies the exact action that a client (formerly
+known as the master) requests a server (formerly known as the slave) to execute.
+This design facilitates precise and efficient communication between devices, ensuring
+that each request is clearly defined and appropriately handled.
+\cite{modbus_function_codes}
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=10cm, height=05cm]{
+        Images/MODBUS Pics/Function Codes.png
+    }
+    % Make sure ProcessTank is in the same folder as your .tex file
+    \caption{Modbus Function Codes}
+    \label{fig:Modbus Function Codes}
+\end{figure}
+
+\textbf{Applications of Modbus:}
+\begin{itemize}
+    \item Supervisory Control and Data Acquisition (SCADA) systems.
+
+    \item Industrial automation for controlling programmable logic controllers (PLCs).
+
+    \item Monitoring energy meters and sensors in smart grids.
+
+    \item Integration of legacy equipment with modern control systems.
+\end{itemize}
+
+\subsection{MQTT}
+MQTT (Message Queuing Telemetry Transport) is a lightweight, publish-subscribe network
+protocol designed for environments with limited bandwidth or high latency.
+Operating atop the TCP/IP protocol suite, it ensures reliable data transmission.
+MQTT has become a cornerstone protocol for the Internet of Things (IoT) and is
+extensively utilized in industrial systems for real-time data exchange. \cite{mqtt_org}
+
+\subsubsection{Publish/Subscribe Architecture}
+The Publish/Subscribe (Pub/Sub) Architecture in MQTT decouples data producers (publishers)
+from data consumers (subscribers) through the use of topics, enhancing scalability
+and flexibility in communication systems.
+
+In this model, publishers send messages to a central broker without specifying
+recipients, and subscribers receive messages from the broker based on their expressed
+interests in specific topics. This decoupling allows for dynamic network
+configurations, where publishers and subscribers can operate independently,
+facilitating efficient data dissemination in distributed systems. \cite{4554519}
+
+There are plenty of broker service providers. Some of the famous are Microsoft Azure,
+AWS IOT Hub, Hive MQTT and CDP Studio as well.
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=12cm, height=07cm]{Images/MQTT Pics/PubSub.png}
+    % Make sure ProcessTank is in the same folder as your .tex file
+    \caption{MQTT Pub/Sub Architecture}
+    \label{MQTT Pub/Sub Architecture}
+\end{figure}
+
+\subsubsection{Data Transmission Model}
+
+Data is transferred in the form of topics, which are strings representing
+specific message channels. The payload, or the actual data, can be in various formats,
+depending on the application. Supported formats include:
+\begin{itemize}
+    \item \textbf{Binary:} Encoded binary data for compact and efficient
+        transmission.
+
+    \item \textbf{Text:} Commonly used text-based formats such as JSON, XML, or
+        plain text.
+
+    \item \textbf{Other Custom Formats:} Applications can define custom formats
+        as per their needs.
+\end{itemize}
+
+\subsubsection{Quality of Service (QoS) Levels and Wildcards}
+
+\begin{itemize}
+    \item \textbf{MQTT defines three QoS levels to manage message delivery
+        reliability:} \cite{mqtt_qos_levels}
+        \begin{itemize}
+            \item \textbf{QoS 0 (At most once):} Messages are delivered with no
+                guarantee of acknowledgment. This is suitable for scenarios where
+                message loss is acceptable, such as non-critical sensor data.
+
+            \item \textbf{QoS 1 (At least once):} Ensures message delivery but
+                may result in duplicates. This level is appropriate for applications
+                where message delivery must be guaranteed, but duplicates can be
+                handled.
+
+            \item \textbf{QoS 2 (Exactly once):} Guarantees that each message is
+                received exactly once. This is ideal for applications where duplicate
+                messages are unacceptable, such as billing systems.
+        \end{itemize}
+
+    \item \textbf{Retained Messages:} Stores the last message sent to a topic, enabling
+        new subscribers to receive the latest data immediately.
+
+    \item \textbf{Last Will and Testament (LWT):} Allows clients to define a "Will"
+        message that is published if they disconnect unexpectedly.
+
+    \item \textbf{Lightweight Design:} Minimizes bandwidth and resource
+        consumption, making it ideal for constrained devices and networks.
+\end{itemize}
+
+In addition to QoS levels, MQTT supports wildcard characters in topic
+subscriptions to facilitate flexible message filtering:
+
+\begin{itemize}
+    \item \textbf{Single-Level Wildcard (+):} Represents a single level in the
+        topic hierarchy. For example, subscribing to home/+/temperature will
+        match topics like home/livingroom/temperature and home/kitchen/temperature,
+        but not home/livingroom/inside/temperature. \cite{mqtt_topics_wildcards}
+
+    \item \textbf{Multi-Level Wildcard (\#):} Matches any number of levels at
+        the end of a topic. For instance, subscribing to home/\# will match home/livingroom/temperature,
+        home/kitchen/humidity, and home/livingroom/inside/temperature. The multi-level
+        wildcard must be the last character in the subscription topic and must be
+        preceded by a topic level separator (/). \cite{mqtt_topics_wildcards}
+\end{itemize}
+
+\textbf{Applications of MQTT:}
+\begin{itemize}
+    \item Real-time monitoring in industrial automation.
+
+    \item Data acquisition from IoT devices in manufacturing environments.
+
+    \item Enabling predictive maintenance through continuous sensor data collection.
+
+    \item Integration with cloud platforms for centralized analytics and control.
+\end{itemize}
+
+\subsection{OPC-UA}
+OPC Unified Architecture (OPC-UA) is a highly adaptable communication protocol that
+is platform-independent, service-oriented, and widely used in industrial automation.
+OPC-UA enables interoperability among various devices and systems, regardless of
+vendor or operating environment.
+
+\subsubsection{OPC-UA Architecture}
+
+OPC UA operates on client server architecture. In this communication method,
+there can be many clients which can be of any field devices or HMI/SCADA systems
+and there is one server which provides services to all the clients.
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=12cm, height=07cm]{Images/OPC UA/OPC_UA.png}
+    % Make sure ProcessTank is in the same folder as your .tex file
+    \caption{OPC UA - Client Server Architecture}
+    \label{OPC UA - Client Server Architecture}
+\end{figure}
+
+\textbf{Core Features of OPC-UA:}
+\begin{itemize}
+    \item \textbf{Platform Independence:} Functions on diverse hardware
+        architectures and operating systems.
+
+    \item \textbf{Security:} Employs robust measures such as encryption, authentication,
+        and certificate-based authorization.
+
+    \item \textbf{Data Modeling:} Supports advanced hierarchical data models and
+        metadata definitions.
+
+    \item \textbf{Extensibility:} Easily integrates with existing systems and
+        accommodates future technological advancements.
+
+    \item \textbf{Interoperability:} Ensures seamless communication across
+        diverse vendor devices .
+\end{itemize}
+
+\subsubsection{OPC-UA Address Space Model}
+
+The OPC UA Address Space Model is a core concept in the OPC UA standard, providing
+a structured way to represent and interact with information in an interoperable manner.
+It defines how data, objects, and their relationships are organized and accessed
+within an OPC UA server.
+
+\subsection{Node Classes}
+The OPC UA standard defines several node classes: \cite{opcua_spec}
+\begin{itemize}
+    \item \textbf{Object Nodes:} Represent physical or logical entities.
+
+    \item \textbf{Variable Nodes:} Store data values such as sensor readings.
+
+    \item \textbf{Method Nodes:} Represent callable operations.
+
+    \item \textbf{ObjectType Nodes:} Define templates for objects.
+
+    \item \textbf{VariableType Nodes:} Define templates for variables.
+
+    \item \textbf{ReferenceType Nodes:} Define relationships between nodes.
+
+    \item \textbf{DataType Nodes:} Specify data structures and formats.
+
+    \item \textbf{View Nodes:} Provide filtered perspectives of the address
+        space.
+\end{itemize}
+
+\textbf{Applications of OPC-UA:}
+\begin{itemize}
+    \item Advanced process control and distributed automation.
+
+    \item Energy monitoring and management systems.
+
+    \item Predictive maintenance using live sensor data.
+
+    \item Smart factory solutions integrating IoT and Industry 4.0 paradigms.
+\end{itemize}
+
+\section{CDP Studio: Control Design Platform}
+\cite{cdpstudio} CDP Studio is a comprehensive development platform for
+industrial control, automation, and edge systems. It offers an integrated environment
+for developing, configuring, testing, deploying, and maintaining control systems
+across various hardware and software configurations.
+
+\subsection*{Key Features}
+\begin{itemize}
+    \item \textbf{Integrated Development Environment (IDE):} Facilitates system
+        logic design, GUI creation, analysis, testing, and deployment. Supports both
+        high-level code development and low-code visual programming, catering to
+        software developers and automation engineers alike.
+
+    \item \textbf{Hardware and Software Compatibility:} Hardware-agnostic
+        platform supporting multiple vendors and device types. Operates seamlessly
+        across Windows and Linux on both Intel and ARM architectures, enabling
+        cross-platform application development.
+
+    \item \textbf{Comprehensive Framework:} Includes libraries and functions
+        essential for building reusable, cross-platform code. Supports industry
+        protocols such as OPC UA, MQTT, Modbus, and CANopen, along with state
+        machines, signal and event handling, messaging, and parameter setting.
+
+    \item \textbf{HMI Designer:} Features an editor for creating intuitive WebUI
+        and native UI applications. Includes pre-made widgets and themes for rapid
+        HMI design, allowing development of professional user interfaces with
+        minimal coding.
+
+    \item \textbf{Real-Time and Distributed Systems Support:} Designed for high-performance,
+        real-time control systems. Object-oriented architecture and name-based
+        routing facilitate the creation of distributed control systems, with functions
+        easily movable between applications through drag-and-drop operations.
+
+    \item \textbf{Cybersecurity Compliance:} Incorporates cybersecurity features
+        compliant with the IEC 62443 standard, enabling the development of secure
+        control systems with user authentication, encryption, and role-based access
+        control.
+\end{itemize}
+
+\section{Modeling of Process Control Tank}
+
+\subsection{Mathematical Formulation}
+The process tank simulation relies on fundamental principles of fluid dynamics.
+Below, we describe the equations governing the tank's behavior:
+
+\subsubsection{Tank Base Area}
+The base area of the tank is calculated as:
+\begin{equation}
+    A = W \cdot D
+\end{equation}
+where:
+\begin{itemize}
+    \item $A$: Tank base area (m$^{2}$)
+
+    \item $W$: Tank width (m)
+
+    \item $D$: Tank depth (m)
+\end{itemize}
+
+\subsubsection{Tank Volume}
+The total volume of the tank is given by:
+\begin{equation}
+    V = A \cdot H
+\end{equation}
+where:
+\begin{itemize}
+    \item $V$: Tank volume (m$^{3}$)
+
+    \item $A$: Tank base area (m$^{2}$)
+
+    \item $H$: Tank height (m)
+\end{itemize}
+
+\subsubsection{Fluid Level Change Due to Inflow}
+The change in fluid height due to inflow is calculated as:
+\begin{equation}
+    F_{h} = F_{h} + \frac{Q_{in}\cdot \Delta t}{A}
+\end{equation}
+where:
+\begin{itemize}
+    \item $F_{h}$: Current fluid height (m)
+
+    \item $Q_{in}$: Inflow rate (m$^{3}$/s)
+
+    \item $\Delta t$: Time step (s)
+
+    \item $A$: Tank base area (m$^{2}$)
+\end{itemize}
+
+\subsubsection{Internal Pressure}
+The internal pressure at the base of the tank is calculated using the
+hydrostatic pressure formula:
+\begin{equation}
+    P_{1} = \rho \cdot g \cdot F_{h}
+\end{equation}
+where:
+\begin{itemize}
+    \item $P_{1}$: Internal pressure (Pa)
+
+    \item $\rho$: Fluid density (kg/m$^{3}$)
+
+    \item $g$: Gravitational acceleration ($9.8$ m/s$^{2}$)
+
+    \item $F_{h}$: Current fluid height (m)
+\end{itemize}
+
+\subsubsection{Outflow Rate}
+The outflow rate through the tank's outlet is modeled as:
+\begin{equation}
+    Q_{out}= C_{v} \cdot \sqrt{g \cdot F_{h}}
+\end{equation}
+where:
+\begin{itemize}
+    \item $Q_{out}$: Outflow rate (m$^{3}$/s)
+
+    \item $C_{v}$: Discharge coefficient
+
+    \item $g$: Gravitational acceleration ($9.8$ m/s$^{2}$)
+
+    \item $F_{h}$: Current fluid height (m)
+\end{itemize}
+
+\subsubsection{Fluid Level Change Due to Outflow}
+Finally, the fluid height is adjusted to account for the outflow:
+\begin{equation}
+    F_{h} = F_{h} - \frac{Q_{out}\cdot \Delta t}{A}
+\end{equation}
+where:
+\begin{itemize}
+    \item $F_{h}$: Current fluid height (m)
+
+    \item $Q_{out}$: Outflow rate (m$^{3}$/s)
+
+    \item $\Delta t$: Time step (s)
+
+    \item $A$: Tank base area (m$^{2}$)
+\end{itemize}
+
+\section{ProcessTankSimulator - HMI Development}
+
+CDP Studio offers a robust environment for developing Human-Machine Interfaces (HMIs)
+through its Design mode. In this mode, two primary form files were created:
+\texttt{mainwidget.ui} and \texttt{tank.ui}. \href{https://cdpstudio.com/manual/cdp-studio/designer/design-mode-manual.html}{CDP
+Studio Design Mode Manual}.
+
+\subsection{Main Widget Interface (\texttt{mainwidget.ui})}
+
+The \texttt{mainwidget.ui} serves as the main user interface and incorporates the
+following essential widgets:
+
+\begin{itemize}
+    \item \textbf{Node Tree:} Visualizes the hierarchical structure of nodes.
+
+    \item \textbf{Node List:} Displays a list of available nodes.
+
+    \item \textbf{UI Loader Widget:} Loads external UI components, facilitating modular
+        design.
+
+    \item \textbf{Scroll Area:} Provides scrollable viewports for content
+        exceeding the display area.
+
+    \item \textbf{CDPBaseLine:} A customizable line widget for separating UI
+        elements.
+
+    \item \textbf{CDPBaseLabel:} Displays text labels within the interface.
+\end{itemize}
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=12cm, height=07cm]{
+        Images/CDP Studio Pics/mainwidget.ui.png
+    }
+    % Make sure ProcessTank is in the same folder as your .tex file
+    \caption{mainwidget.ui}
+    \label{fig:mainwidget.ui}
+\end{figure}
+
+\subsection{Tank Interface (\texttt{tank.ui})}
+
+The \texttt{tank.ui} form was designed to manage the visualization and control of
+the Process Control Tank. It includes:
+
+\begin{itemize}
+    \item \textbf{ComboBox:} Allows dynamic selection of I/O protocols during
+        runtime.
+
+    \item \textbf{CDPBaseLineEdits and CDPBaseLabels:} Present parameters and
+        signals related to the Process Control Tank.
+
+    \item \textbf{CDPBaseBar:} Graphically represents the fluid level within the
+        tank.
+\end{itemize}
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=12cm, height=07cm]{
+        Images/CDP Studio Pics/uifile(tank.ui).png
+    }
+    % Make sure ProcessTank is in the same folder as your .tex file
+    \caption{tank.ui)}
+    \label{tank.ui}
+\end{figure}
+
+\subsection{Signal and Parameter Routing}
+
+We configured relative routing for the signals and parameters of the \texttt{TankInterface}
+to ensure seamless data flow between components. The \texttt{uiLoaderWidget} was
+set to load the \texttt{tank.ui} file, establishing a connection between the
+main interface and the tank controls.
+
+\subsection{Signals and Slots Configuration}
+
+Signals and slots were configured for the widgets in \texttt{mainwidget.ui} to
+enable responsive interactions and event handling within the HMI.
+
+\section{ProcessTankSimulator - Library Development}
+
+CDP Studio provides functionality for creating custom libraries for control systems
+model creation using C++.
+
+\subsection{ProcessTankSimulator Model}
+
+Using CDP Studio's code mode, a \textit{ProcessTankSimulator} (CDP Component Model)
+was created with the parameters and signals defined in the mathematical model of
+the Process Control Tank.
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=10cm, height=10cm]{
+        Images/CDP Studio Pics/ProcessTankSimulation.png
+    }
+    % Make sure ProcessTank is in the same folder as your .tex file
+    \caption{ProcessTankSimulator Model}
+    \label{fig:ProcessTankSimulator Model}
+\end{figure}
+
+\subsection{TankInterface Model Creation}
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=12cm, height=07cm]{
+        Images/CDP Studio Pics/ProcessTankSimulationLib.TankInterface.png
+    }
+    % Make sure ProcessTank is in the same folder as your .tex file
+    \caption{ProcessTankSimulationLib.TankInterface}
+    \label{fig:ProcessTankSimulatorLib.TankInterface}
+\end{figure}
+
+Every TankInterface Model component has the following sub-components with the configurations
+defined for each.
+
+TankInterface Valued Connection were added to have the routing from the ProcessTankSimulator.
+
+CDP - ProcessTankSimulator Library Development A Process Tank Simulator Library (ProcessTankSimulatorLib)
+was created using the CDP Studio library creation module.
+
+The library contains the TankInterface incorporating the Process Tank Simulator Model
+and the configuration of IOs for OPC-UA, MQTT, and MODBUS. CDP Studio provides
+the functionality of creating the routing and configurations of Model components
+through visual block diagrams.
+
+ModbusSlavePacket
+
+IOModule (Data)
+
+IOPort
+
+AddPort
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=12cm, height=07cm]{
+        Images/CDP Studio Pics/ProcessTankSimulatorLib.TankInterface.png
+    }
+    % Make sure ProcessTank is in the same folder as your .tex file
+    \caption{ProcessTankSimulatorLib.TankInterface(Sub Components)}
+    \label{fig:ProcessTankSimulatorLib.TankInterface(Sub Components}
+\end{figure}
+
+\subsection{MQTTClient}
+
+PublishTopics Following Publish Topics were added with the configurations.
+
+SubscribeTopics Following Subscribe Topics were added with the configurations.
+
+AddPort To fetch the Data values of Publish and Subscribe Topics defined in the
+MQTTClient Model and display them in the HMI.
+
+IOPort To fetch the addressing of Publish and Subscribe Topics defined in the
+MQTTClient Model and display them in the HMI.
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=12cm, height=07cm]{
+        Images/CDP Studio Pics/MQTTClient.png
+    }
+    % Make sure ProcessTank is in the same folder as your .tex file
+    \caption{ProcessTankSimulatorLib.TankInterface.MQTTClient}
+    \label{fig:ProcessTankSimulatorLib.TankInterface.MQTTClient}
+\end{figure}
+
+\subsection{OPC-UA-Server}
+
+ServerObjectNode
+
+In OPCUA Server Object Node was added. And ServerVariableNodes were added to
+read and write data to the address space model of OPC UA Server.
+
+IOPort
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=12cm, height=07cm]{
+        Images/CDP Studio Pics/OPCUAServer.png
+    }
+    % Make sure ProcessTank is in the same folder as your .tex file
+    \caption{ProcessTankSimulatorLib.TankInterface.OPC-UA-Server}
+    \label{fig:ProcessTankSimulatorLib.TankInterface.OPC-UA-Server}
+\end{figure}
+
+AddPort
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=12cm, height=07cm]{
+        Images/CDP Studio Pics/AddPortMUX.png
+    }
+    % Make sure ProcessTank is in the same folder as your .tex file
+    \caption{ProcessTankSimulatorLib.TankInterface.AddPortMUX}
+    \label{fig:ProcessTankSimulatorLib.TankInterface.AddPortMUX}
+\end{figure}
+
+\subsection{PortMUX}
+In CDP Studio, The PortMUX component is a multiplexer for CDPPort objects where Index=0
+selects the first input port and propagates the connection or data to the output
+port.
+
+\subsection{ModbusSlaveTCP}
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=12cm, height=07cm]{
+        Images/CDP Studio Pics/ModbusSlaveTCP.png
+    }
+    % Make sure ProcessTank is in the same folder as your .tex file
+    \caption{ProcessTankSimulatorLib.TankInterface.ModbusSlaveTCP}
+    \label{fig:ProcessTankSimulatorLib.TankInterface.MO}
+\end{figure}
+
+\subsection{AddPortMUX}
+
+The \textbf{AddPortMUX}, a multiplexer component introduced in the \textit{ProcessTankSimulatorLib}
+that manages port routing between ModbusSlaveTCP.AddPort, MQTTClient.AddPort and
+OPC-UA-Server.AddPort. \end{itemize}
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=12cm, height=07cm]{
+        Images/CDP Studio Pics/AddPortMUX.png
+    }
+    % Make sure ProcessTank is in the same folder as your .tex file
+    \caption{ProcessTankSimulatorLib.TankInterface.AddPortMUX}
+    \label{fig:ProcessTankSimulatorLib.TankInterface.AddPortMUX}
+\end{figure}
+
+\subsection*{Port Configuration}
+The component has four main ports:
+\begin{itemize}
+    \item \textbf{AddPort (Input Port)}
+        \begin{itemize}
+            \item \textbf{Direction:} Input only
+
+            \item Used as the main input port for multiplexing
+        \end{itemize}
+
+    \item \textbf{AddPort1}
+        \begin{itemize}
+            \item Routes to \texttt{ModbusSlaveTCP.AddPort}
+
+            \item Handles Modbus TCP/IP communications for Registers Addressing
+        \end{itemize}
+
+    \item \textbf{AddPort2}
+        \begin{itemize}
+            \item Routes to \texttt{MQTTClient.AddPort}
+
+            \item Manages MQTT protocol communications for Topics Addressing
+        \end{itemize}
+
+    \item \textbf{AddPort3}
+        \begin{itemize}
+            \item Routes to \texttt{OPC-UA-Server.AddPort}
+
+            \item Handles OPC UA protocol communications for Nodes Addressing
+        \end{itemize}
+\end{itemize}
+
+\subsection*{Signals}
+\begin{itemize}
+    \item Implements an \textbf{Index} signal for port selection
+
+    \item Used for dynamic routing of the IOServers Addresses
+\end{itemize}
+
+\section{ProcessTankSimulator - System Application Development}
+
+In CDP Studio, a system (project) contains one or more applications that work together
+to form a working control system. An application contains a collection of
+component instances (objects) running on a computer.
+
+A new CDPComponent with name ProcessTanks added. Inside it 100 Tankinterface components
+were added from the resource library created with name (ProcessTankSimulatorLib).
+and it will have the cdpTargetRouting from mainwidget.ui nodelist. In this way upon
+running the system the nodelist will show all the childrens it contains inside it
+(TankInterface, TankInterface1... TankInterface99).
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=12cm, height=07cm]{
+        Images/CDP Studio Pics/ProcessTanks.TankInterfaces.png
+    }
+    % Make sure ProcessTank is in the same folder as your .tex file
+    \caption{ProcessTanks.TankInterfaces.ui}
+    \label{fig:ProcessTanks.TankInterfaces.ui}
+\end{figure}
+
+\subsection{CDPStudio - Python Configurator API }
+
+CDPStudio, primarily a no-code development environment, also offers a Python Configurator
+API for large-scale configuration changes. This API allows users to modify
+configuration properties of objects and models programmatically.
+
+For tasks such as updating the numbering of Ports in case of OPC UA, MQTT Publish/Subcribe
+Topics and Modbus Holding Registers addressing, CDP Python Configurator API was
+utilized effectively. The changes were managed based on predefined CSV files,
+ensuring accuracy and efficiency. The related code and configuration files are available
+in the attachments folder (ProcessTankSimulator-PythonConfigurator).
+
+\section{Experimental Setup}
+The simulation of the Process Control Tanks was implemented in CDP Studio IDE for
+the monitoring and controlling the Process Tank parameters and signals. By
+integrating OPC-UA, MQTT, and MODBUS protocols, data was exchanged and monitored
+through the web-based GUI. The system demonstrated seamless communication
+between protocols, with the HMI accurately reflecting the tank's state and parameters.
+
+\section{Conclusion and Results}
+
+For the ProcessTankSimulator project deployment Configuration across WiFi, following
+settings were done so that it is accessible to users attached to the same WiFi Network
+for the testing and controlling purpose.
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=12cm, height=07cm]{
+        Images/CDP Studio Pics/DeployConfiguration.png
+    }
+    % Make sure ProcessTank is in the same folder as your .tex file
+    \caption{DeployConfiguration}
+    \label{fig:DeployConfiguration}
+\end{figure}
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=12cm, height=07cm]{Images/CDP Studio Pics/Test1.png}
+    % Make sure ProcessTank is in the same folder as your .tex file
+    \caption{Test}
+    \label{fig:Test}
+\end{figure}
+
+\section{Applications of the Proposed System}
+
+The proposed system addresses critical challenges in industrial environments, including
+the need for flexible communication between devices using diverse protocols such
+as OPC-UA, MQTT, and Modbus. By enabling dynamic protocol selection through a
+user-friendly web-based HMI, the system offers significant benefits across various
+domains, ranging from industrial automation to IoT and smart manufacturing.
+
+1. Industrial Automation and Process Control
+
+Modern industrial plants often include devices from multiple vendors, each
+relying on different communication protocols. This diversity creates challenges for
+seamless interoperability and process control. The proposed system resolves this
+by allowing operators to dynamically select the appropriate protocol (OPC-UA,
+MQTT, or Modbus) for specific devices or scenarios.
+
+2. For instance, in a chemical processing plant, the system can be used to
+control and monitor process tanks in real-time, switching between OPC-UA, Modbus
+for advanced data modeling and MQTT for IoT-connected sensors as needed.
+
+\section{Future Work}
+
+Future work could focus on refining the Process Tank Simulator model to include advanced
+fluid dynamics, such as turbulence and multi-phase flows, to enhance the simulation's
+accuracy further. Also there are a lot of additional features from the IO
+Servers can be added (security, user authentication etc...).
